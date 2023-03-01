@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/style.css" rel="stylesheet">
+
+
+    <!-- Link For Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <!-- FONT: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <!-- Googel Fonts End -->
+
+</head>
+
+<body>
+
+    <!-- Create Task Pop Up Window -->
+    <div class="create_task_popup" id="create_task_popup">
+        <div class="create_task_popup_title">
+            <div class="create_task_popup_title_container">
+                <p>Create Your Task</p>
+                <p id="close_popup_btn"><i class="material-icons">&#10005;</i></p>
+            </div>
+        </div>
+
+        <div class="create_task_popup_body">
+            <!-- <input type="number" id="task_id_input" placeholder="Enter Task Id"> -->
+            <input type="text" id="task_title_input" placeholder="Enter Task Title">
+            <input type="text" id="task_desc_input" placeholder="Enter Task Description">
+            <input type="datetime-local" id="task_due_date_input">
+            <select id="task_status_input">
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+            </select>
+            <input type="button" id="add_task_btn" value="Add Task">
+        </div>
+    </div>
+
+
+    <!-- wrapper div -->
+    <div class="wrapper">
+
+        <!-- Operation Container -->
+        <div class="operation_container">
+            <button id="btn1">Create Task</button>
+            <button id="btn2">Show Completed Task</button>
+        </div>
+
+        <!-- Task Table Container -->
+        <div class="task_table_container">
+
+            <!-- Task Table -->
+            <table id="task_table">
+                <tr>
+                    <th>Task Id</th>
+                    <th>Task Title</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th colspan="2">Operations</th>
+                </tr>
+                <!-- <tr>
+                    <td>1</td>
+                    <td>Please Complete Your Homework Of Maths.</td>
+                    <td>02/03/2023 (Tommorrow)</td>
+                    <td>In Progress</td>
+                    <td title="Delete Task"><i class="material-icons">&#xe872;</i></td>
+                    <td title="Update Task"><i class="material-icons">&#xe3c9;</i></td>
+                </tr> -->
+            </table>
+
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase Configuration Here -----------------
+
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCD3hUGuE5-6HLwWsFiE2nbDbKm9eA8P0",
+            authDomain: "taskmanagement-78f26.firebaseapp.com",
+            projectId: "taskmanagement-78f26",
+            storageBucket: "taskmanagement-78f26.appspot.com",
+            messagingSenderId: "975585857754",
+            appId: "1:975585857754:web:41e23b1e2ec8b4645595e3",
+            measurementId: "G-BSLT64TPVR"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+
+        import {
+            getFirestore,
+            doc,
+            getDoc,
+            setDoc,
+            collection,
+            addDoc,
+            updateDoc,
+            deleteDoc,
+            deleteField,
+            getDocs
+        }
+            from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+
+        const db = getFirestore();
+
+        // Referencing all components
+        let create_task_popup = document.getElementById('create_task_popup');
+        let create_task_btn = document.getElementById('btn1');
+        let show_completed_task = document.getElementById('btn2');
+        let close_task_popup = document.getElementById('close_popup_btn');
+        let add_task_btn = document.getElementById('add_task_btn');
+        let task_table = document.getElementById('task_table');
+        // TASK POPUP FORM REFERENCES
+        let popup_title = document.getElementById('task_title_input');
+        let popup_desc = document.getElementById('task_desc_input');
+        let popup_due = document.getElementById('task_due_date_input');
+        let popup_status = document.getElementById('task_status_input');
+        // Fetching today's date
+        let today = new Date();
+        let dd = String(today.getDate()).padStart(2, '0');
+        let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+        let yyyy = today.getFullYear();
+
+        today = mm + '/' + dd + '/' + yyyy;
+
+        // Functions
+        function displayCreateTaskPopup() {
+            create_task_popup.style.display = 'block';
+        }
+
+        function closeTaskPopup() {
+            create_task_popup.style.display = 'none';
+        }
+        function reset() {
+            popup_title.value = '';
+            popup_desc.value = '';
+            popup_due.value = '';
+            popup_status.value = '';
+            closeTaskPopup();
+        }
+
+        async function AddDocument_CustomeID() {
+
+            // var ref = doc(db, "tasks", "2"); FOR CUSTOME ID
+            var ref = collection(db, "tasks"); // FOR AUTO ID
+
+            // const docRef = await setDoc( // For CUSTOME ID
+            const docRef = await addDoc( // For AUTO ID
+                ref, {
+                task_create_date: today,
+                task_desc: popup_desc.value,
+                task_due_date: popup_due.value,
+                task_name: popup_title.value,
+                task_status: popup_status.value
+            }
+            )
+            .then(() => {
+                alert("Task added successfully.");
+                reset();
+            })
+            .catch((error) => {
+                alert("Error: " + error);
+            });
+
+            ReadDocument(); // Refreshing List
+        }
+
+        // <tr>
+        //     <td>1</td>
+        //     <td>Please Complete Your Homework Of Maths.</td>
+        //     <td>02/03/2023 (Tommorrow)</td>
+        //     <td>In Progress</td>
+        //     <td title="Delete Task"><i class="material-icons">&#xe872;</i></td>
+        //     <td title="Update Task"><i class="material-icons">&#xe3c9;</i></td>
+        // </tr>
+
+        async function ReadDocument() 
+        {
+            const querySnapshot = await getDocs(collection(db, 'tasks'));
+            let i = 1; // counter for task_id
+            querySnapshot.forEach((doc) => {
+
+                // Creating new row for each task
+                const trElement = document.createElement('tr');
+                trElement.setAttribute('id','trEle');
+                const td1 = document.createElement('td');
+                td1.innerHTML = i;
+                i++;
+                trElement.appendChild(td1);
+
+                const td2 = document.createElement('td');
+                td2.innerHTML = doc.data().task_name;
+                trElement.appendChild(td2);
+                
+                const td3 = document.createElement('td');
+                td3.innerHTML = doc.data().task_due_date;
+                trElement.appendChild(td3);
+
+                const td4 = document.createElement('td');
+                td4.innerHTML = doc.data().task_status;
+                trElement.appendChild(td4);
+
+                const td5 = document.createElement('td');
+                const iTag = document.createElement('i');
+                iTag.setAttribute('class','material-icons');
+                iTag.innerHTML = '&#xe872;';
+                td5.appendChild(iTag);
+                trElement.appendChild(td5);
+
+                const td6 = document.createElement('td');
+                const iTag2 = document.createElement('i');
+                iTag2.setAttribute('class','material-icons');
+                iTag2.innerHTML = '&#xe3c9;';
+                td6.appendChild(iTag2);
+                trElement.appendChild(td6);     
+                
+                task_table.appendChild(trElement);
+            });
+        }
+
+
+        // Event Listeners
+        ReadDocument();
+        // task_table.remove('tr');
+        create_task_btn.addEventListener("click", displayCreateTaskPopup);
+        close_task_popup.addEventListener("click", closeTaskPopup);
+        add_task_btn.addEventListener("click", AddDocument_CustomeID);
+        show_completed_task.addEventListener("click", ReadDocument);
+
+
+    </script>
+</body>
+
+</html>
