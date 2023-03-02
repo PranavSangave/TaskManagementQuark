@@ -37,6 +37,7 @@
             <input type="text" id="task_desc_input" placeholder="Enter Task Description">
             <input type="datetime-local" id="task_due_date_input">
             <select id="task_status_input">
+                <option value="not_selected">Select Status</option>
                 <option value="pending">Pending</option>
                 <option value="in_progress">In Progress</option>
                 <option value="completed">Completed</option>
@@ -138,6 +139,8 @@
         let dd = String(today.getDate()).padStart(2, '0');
         let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
         let yyyy = today.getFullYear();
+        // Id counter
+        let i = 1;
 
         today = mm + '/' + dd + '/' + yyyy;
 
@@ -148,6 +151,7 @@
 
         function closeTaskPopup() {
             create_task_popup.style.display = 'none';
+            // alert(i);
         }
         function reset() {
             popup_title.value = '';
@@ -159,12 +163,29 @@
 
         async function AddDocument_CustomeID() {
 
-            // var ref = doc(db, "tasks", "2"); FOR CUSTOME ID
-            var ref = collection(db, "tasks"); // FOR AUTO ID
+            // Checking where all fields are filled or not
+            let due_date = popup_due.value; // retrieving date in variable to check whether it is blank or not
+            if(popup_title.value == '' || popup_desc.value == ''
+                || popup_status.value == 'not_selected' || due_date == '') {
+                alert("Please Fill All Fields");
+                return;
+            }
 
-            // const docRef = await setDoc( // For CUSTOME ID
-            const docRef = await addDoc( // For AUTO ID
+            // Fetching last saved Id
+            let last_id;
+            const querySnapshot = await getDocs(collection(db, 'meta_data'));
+            querySnapshot.forEach((doc)=>{
+                last_id = doc.data().last_saved_id;
+            });
+            
+
+            var ref = doc(db, "tasks", (last_id+1).toString()); //FOR CUSTOME ID
+            // var ref = collection(db, "tasks"); // FOR AUTO ID
+
+            const docRef = await setDoc( // For CUSTOME ID
+            // const docRef = await addDoc( // For AUTO ID
                 ref, {
+                task_id: last_id+1,
                 task_create_date: today,
                 task_desc: popup_desc.value,
                 task_due_date: popup_due.value,
@@ -172,15 +193,33 @@
                 task_status: popup_status.value
             }
             )
-            .then(() => {
-                alert("Task added successfully.");
-                reset();
-            })
-            .catch((error) => {
-                alert("Error: " + error);
-            });
+                .then(() => {
+                    alert("Task added successfully.");
+                    reset();
+                })
+                .catch((error) => {
+                    alert("Error: " + error);
+                });
+            i++;
 
-            ReadDocument(); // Refreshing List
+            // Updating last_id in meta_data collection
+            var meta_ref = doc(db, "meta_data", "TnG3TPGdoaInq6Qgnhzu"); //FOR CUSTOME ID
+            const metadocRef = await setDoc( // For CUSTOME ID
+            // const docRef = await addDoc( // For AUTO ID
+                meta_ref, {
+                last_saved_id: last_id+1
+            }
+            )
+                .then(() => {
+                    // alert("Task added successfully.");
+                    // reset();
+                })
+                .catch((error) => {
+                    alert("Error: " + error);
+                });
+
+            // ReadDocument(); // Refreshing List
+            location.reload();
         }
 
         // <tr>
@@ -192,15 +231,16 @@
         //     <td title="Update Task"><i class="material-icons">&#xe3c9;</i></td>
         // </tr>
 
-        async function ReadDocument() 
-        {
+        let deleteId = -1;
+        async function ReadDocument() {
             const querySnapshot = await getDocs(collection(db, 'tasks'));
-            let i = 1; // counter for task_id
+            i = 1; // counter for task_id
             querySnapshot.forEach((doc) => {
 
                 // Creating new row for each task
                 const trElement = document.createElement('tr');
-                trElement.setAttribute('id','trEle');
+
+                trElement.setAttribute('id', 'trEle');
                 const td1 = document.createElement('td');
                 td1.innerHTML = i;
                 i++;
@@ -209,33 +249,93 @@
                 const td2 = document.createElement('td');
                 td2.innerHTML = doc.data().task_name;
                 trElement.appendChild(td2);
-                
+
                 const td3 = document.createElement('td');
                 td3.innerHTML = doc.data().task_due_date;
                 trElement.appendChild(td3);
 
                 const td4 = document.createElement('td');
-                td4.innerHTML = doc.data().task_status;
                 trElement.appendChild(td4);
 
                 const td5 = document.createElement('td');
                 const iTag = document.createElement('i');
-                iTag.setAttribute('class','material-icons');
+                iTag.setAttribute('class', 'material-icons');
+                iTag.setAttribute('id', i.toString());
+                // iTag.setAttribute('onclick','gg(10)');
+                iTag.addEventListener("click", function () {
+                    deleteId = doc.data().task_id;
+                    CompleteTask();
+                });
                 iTag.innerHTML = '&#xe872;';
                 td5.appendChild(iTag);
                 trElement.appendChild(td5);
 
                 const td6 = document.createElement('td');
                 const iTag2 = document.createElement('i');
-                iTag2.setAttribute('class','material-icons');
+                iTag2.setAttribute('class', 'material-icons');
                 iTag2.innerHTML = '&#xe3c9;';
+
+                // setting Status Strings and row colors as per status
+                if(doc.data().task_status == 'completed') {
+                    td4.innerHTML = "Done";
+                    trElement.style.backgroundColor = '#90EE90';
+                }
+                else if(doc.data().task_status == 'pending') {
+                    td4.innerHTML = "Pending";
+                    trElement.style.backgroundColor = '#FFCCCB';
+                }
+                else if(doc.data().task_status == 'in_progress') {
+                    td4.innerHTML = "In Progress";
+                    trElement.style.backgroundColor = '#FFD580';
+                }
+
+
                 td6.appendChild(iTag2);
-                trElement.appendChild(td6);     
-                
+                trElement.appendChild(td6);
+
                 task_table.appendChild(trElement);
             });
         }
 
+        async function DeleteDocument() {
+            
+            // alert('Deleted Element Id: ' + deleteId);
+            var ref = doc(db, "tasks", deleteId.toString());
+            const docSnap = await getDoc(ref);
+
+            if (!docSnap.exists()) {
+                alert('Task Not Exist');
+                return;
+            }
+
+            await deleteDoc(ref)
+                .then(() => {
+                    alert("Task Completed");
+                })
+                .catch((error) => {
+                    alert("Something wents wrong");
+                });
+        }
+
+        async function CompleteTask() {
+            var ref = doc(db, "tasks", deleteId.toString()); //FOR CUSTOME ID
+            const metadocRef = await updateDoc( // For CUSTOME ID
+            // const docRef = await addDoc( // For AUTO ID
+                ref, {
+                task_status: "completed"
+            }
+            )
+                .then(() => {
+                    alert("Task Completed successfully.");
+                    // reset();
+                })
+                .catch((error) => {
+                    alert("Error: " + error);
+                });
+
+            // ReadDocument(); // Refreshing List
+            location.reload();
+        }
 
         // Event Listeners
         ReadDocument();
@@ -244,7 +344,6 @@
         close_task_popup.addEventListener("click", closeTaskPopup);
         add_task_btn.addEventListener("click", AddDocument_CustomeID);
         show_completed_task.addEventListener("click", ReadDocument);
-
 
     </script>
 </body>
