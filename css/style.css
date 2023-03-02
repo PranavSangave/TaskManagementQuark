@@ -168,7 +168,7 @@
     margin-bottom: 10px;
 }
 
-.create_task_popup_body #add_task_btn {
+.create_task_popup_body .add_task_btn {
     height: 35px;
     width: 103%;
     border: none;
@@ -182,7 +182,11 @@
     transition: .3s;
 }
 
-.create_task_popup_body #add_task_btn:hover {
+.create_task_popup_body .add_task_btn:hover {
     cursor: pointer;
     background-color: #8f8f8f;
+}
+
+.create_task_popup_body #update_task_btn {
+    display: none;
 }

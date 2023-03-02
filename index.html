@@ -26,7 +26,7 @@
     <div class="create_task_popup" id="create_task_popup">
         <div class="create_task_popup_title">
             <div class="create_task_popup_title_container">
-                <p>Create Your Task</p>
+                <p id="popup_header">Create Your Task</p>
                 <p id="close_popup_btn"><i class="material-icons">&#10005;</i></p>
             </div>
         </div>
@@ -42,7 +42,8 @@
                 <option value="in_progress">In Progress</option>
                 <option value="completed">Completed</option>
             </select>
-            <input type="button" id="add_task_btn" value="Add Task">
+            <input type="button" class="add_task_btn" id="add_task_btn" value="Add Task">
+            <input type="button" class="add_task_btn" id="update_task_btn" value="Update Task">
         </div>
     </div>
 
@@ -68,14 +69,8 @@
                     <th>Status</th>
                     <th colspan="2">Operations</th>
                 </tr>
-                <!-- <tr>
-                    <td>1</td>
-                    <td>Please Complete Your Homework Of Maths.</td>
-                    <td>02/03/2023 (Tommorrow)</td>
-                    <td>In Progress</td>
-                    <td title="Delete Task"><i class="material-icons">&#xe872;</i></td>
-                    <td title="Update Task"><i class="material-icons">&#xe3c9;</i></td>
-                </tr> -->
+
+                <!-- Here All Other Rows Are Create By JS -->
             </table>
 
         </div>
@@ -128,12 +123,14 @@
         let show_completed_task = document.getElementById('btn2');
         let close_task_popup = document.getElementById('close_popup_btn');
         let add_task_btn = document.getElementById('add_task_btn');
+        let update_task_btn = document.getElementById('update_task_btn');
         let task_table = document.getElementById('task_table');
         // TASK POPUP FORM REFERENCES
         let popup_title = document.getElementById('task_title_input');
         let popup_desc = document.getElementById('task_desc_input');
         let popup_due = document.getElementById('task_due_date_input');
         let popup_status = document.getElementById('task_status_input');
+        let popup_header = document.getElementById('popup_header');
         // Fetching today's date
         let today = new Date();
         let dd = String(today.getDate()).padStart(2, '0');
@@ -165,7 +162,7 @@
 
             // Checking where all fields are filled or not
             let due_date = popup_due.value; // retrieving date in variable to check whether it is blank or not
-            if(popup_title.value == '' || popup_desc.value == ''
+            if (popup_title.value == '' || popup_desc.value == ''
                 || popup_status.value == 'not_selected' || due_date == '') {
                 alert("Please Fill All Fields");
                 return;
@@ -174,18 +171,18 @@
             // Fetching last saved Id
             let last_id;
             const querySnapshot = await getDocs(collection(db, 'meta_data'));
-            querySnapshot.forEach((doc)=>{
+            querySnapshot.forEach((doc) => {
                 last_id = doc.data().last_saved_id;
             });
-            
 
-            var ref = doc(db, "tasks", (last_id+1).toString()); //FOR CUSTOME ID
+
+            var ref = doc(db, "tasks", (last_id + 1).toString()); //FOR CUSTOME ID
             // var ref = collection(db, "tasks"); // FOR AUTO ID
 
             const docRef = await setDoc( // For CUSTOME ID
-            // const docRef = await addDoc( // For AUTO ID
+                // const docRef = await addDoc( // For AUTO ID
                 ref, {
-                task_id: last_id+1,
+                task_id: last_id + 1,
                 task_create_date: today,
                 task_desc: popup_desc.value,
                 task_due_date: popup_due.value,
@@ -194,7 +191,7 @@
             }
             )
                 .then(() => {
-                    alert("Task added successfully.");
+                    // alert("Task added successfully.");
                     reset();
                 })
                 .catch((error) => {
@@ -205,31 +202,20 @@
             // Updating last_id in meta_data collection
             var meta_ref = doc(db, "meta_data", "TnG3TPGdoaInq6Qgnhzu"); //FOR CUSTOME ID
             const metadocRef = await setDoc( // For CUSTOME ID
-            // const docRef = await addDoc( // For AUTO ID
+                // const docRef = await addDoc( // For AUTO ID
                 meta_ref, {
-                last_saved_id: last_id+1
+                last_saved_id: last_id + 1
             }
             )
                 .then(() => {
-                    // alert("Task added successfully.");
-                    // reset();
                 })
                 .catch((error) => {
                     alert("Error: " + error);
                 });
 
-            // ReadDocument(); // Refreshing List
-            location.reload();
+            location.reload(); // Refreshing the page
         }
 
-        // <tr>
-        //     <td>1</td>
-        //     <td>Please Complete Your Homework Of Maths.</td>
-        //     <td>02/03/2023 (Tommorrow)</td>
-        //     <td>In Progress</td>
-        //     <td title="Delete Task"><i class="material-icons">&#xe872;</i></td>
-        //     <td title="Update Task"><i class="material-icons">&#xe3c9;</i></td>
-        // </tr>
 
         let deleteId = -1;
         async function ReadDocument() {
@@ -258,47 +244,54 @@
                 trElement.appendChild(td4);
 
                 const td5 = document.createElement('td');
+
                 const iTag = document.createElement('i');
                 iTag.setAttribute('class', 'material-icons');
                 iTag.setAttribute('id', i.toString());
-                // iTag.setAttribute('onclick','gg(10)');
                 iTag.addEventListener("click", function () {
                     deleteId = doc.data().task_id;
                     CompleteTask();
                 });
                 iTag.innerHTML = '&#xe872;';
+
                 td5.appendChild(iTag);
                 trElement.appendChild(td5);
 
                 const td6 = document.createElement('td');
+
                 const iTag2 = document.createElement('i');
                 iTag2.setAttribute('class', 'material-icons');
+                iTag2.addEventListener("click", function () {
+                    deleteId = doc.data().task_id; // here Using the delete id as update_id
+                    UpdateTask();
+                });
                 iTag2.innerHTML = '&#xe3c9;';
 
+
                 // setting Status Strings and row colors as per status
-                if(doc.data().task_status == 'completed') {
+                if (doc.data().task_status == 'completed') {
                     td4.innerHTML = "Done";
                     trElement.style.backgroundColor = '#90EE90';
                 }
-                else if(doc.data().task_status == 'pending') {
+                else if (doc.data().task_status == 'pending') {
                     td4.innerHTML = "Pending";
                     trElement.style.backgroundColor = '#FFCCCB';
                 }
-                else if(doc.data().task_status == 'in_progress') {
+                else if (doc.data().task_status == 'in_progress') {
                     td4.innerHTML = "In Progress";
                     trElement.style.backgroundColor = '#FFD580';
                 }
-
 
                 td6.appendChild(iTag2);
                 trElement.appendChild(td6);
 
                 task_table.appendChild(trElement);
+
             });
         }
 
         async function DeleteDocument() {
-            
+
             // alert('Deleted Element Id: ' + deleteId);
             var ref = doc(db, "tasks", deleteId.toString());
             const docSnap = await getDoc(ref);
@@ -310,7 +303,7 @@
 
             await deleteDoc(ref)
                 .then(() => {
-                    alert("Task Completed");
+                    // alert("Task Completed");
                 })
                 .catch((error) => {
                     alert("Something wents wrong");
@@ -320,13 +313,13 @@
         async function CompleteTask() {
             var ref = doc(db, "tasks", deleteId.toString()); //FOR CUSTOME ID
             const metadocRef = await updateDoc( // For CUSTOME ID
-            // const docRef = await addDoc( // For AUTO ID
+                // const docRef = await addDoc( // For AUTO ID
                 ref, {
                 task_status: "completed"
             }
             )
                 .then(() => {
-                    alert("Task Completed successfully.");
+                    // alert("Task Completed successfully.");
                     // reset();
                 })
                 .catch((error) => {
@@ -335,6 +328,49 @@
 
             // ReadDocument(); // Refreshing List
             location.reload();
+        }
+
+        async function UpdateTask() {
+
+            // Showing POP UP With Previous Details
+            var ref_update = doc(db, "tasks", deleteId.toString());
+            const docSnap = await getDoc(ref_update);
+
+            popup_header.innerHTML = "Update Task Here";
+            add_task_btn.style.display = 'none';
+            update_task_btn.style.display = 'block';
+
+            if (docSnap.exists()) {
+                popup_title.value = docSnap.data().task_name;
+                popup_desc.value = docSnap.data().task_desc;
+                popup_due.value = docSnap.data().task_due_date;
+                popup_status.value = docSnap.data().task_status;
+                add_task_btn.value = "Update Task";
+            }
+            displayCreateTaskPopup();
+
+            // Updating task after clicking on update task
+            update_task_btn.addEventListener("click", async function () {
+                const Ref = await updateDoc( // For CUSTOME ID
+                    // const docRef = await addDoc( // For AUTO ID
+                    ref_update, {
+                    task_name : popup_title.value,
+                    task_desc : popup_desc.value,
+                    task_due_date : popup_due.value,
+                    task_status : popup_status.value
+                }
+                )
+                    .then(() => {
+                        // alert("Task Updated successfully.");
+                        // reset();
+                    })
+                    .catch((error) => {
+                        alert("Error: " + error);
+                    });
+
+                // ReadDocument(); // Refreshing List
+                location.reload();
+            });
         }
 
         // Event Listeners
