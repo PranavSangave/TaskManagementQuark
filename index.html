@@ -16,6 +16,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <!-- FONT: PATUA ONE -->
+    <link href="https://fonts.googleapis.com/css2?family=Patua+One&display=swap" rel="stylesheet">
     <!-- Googel Fonts End -->
 
 </head>
@@ -51,10 +53,19 @@
     <!-- wrapper div -->
     <div class="wrapper">
 
+        <!-- Header -->
+        <div class="body_header">
+            Manage Your Tasks With Us
+        </div>
+
         <!-- Operation Container -->
         <div class="operation_container">
             <button id="btn1">Create Task</button>
-            <button id="btn2">Show Completed Task</button>
+            <button id="btn2">Completed Tasks</button>
+            <button id="btn4">Pending Tasks</button>
+            <button id="btn5">In Progress</button>
+            <button id="btn3">All Tasks</button>
+            <button id="btn6">Reset</button>
         </div>
 
         <!-- Task Table Container -->
@@ -122,9 +133,14 @@
         let create_task_btn = document.getElementById('btn1');
         let show_completed_task = document.getElementById('btn2');
         let close_task_popup = document.getElementById('close_popup_btn');
+        let show_all_tasks = document.getElementById('btn3');
         let add_task_btn = document.getElementById('add_task_btn');
         let update_task_btn = document.getElementById('update_task_btn');
         let task_table = document.getElementById('task_table');
+        let pending_task_btn = document.getElementById('btn4');
+        let in_progress_task_btn = document.getElementById('btn5');
+        let reset_btn = document.getElementById('btn6');
+
         // TASK POPUP FORM REFERENCES
         let popup_title = document.getElementById('task_title_input');
         let popup_desc = document.getElementById('task_desc_input');
@@ -156,6 +172,14 @@
             popup_due.value = '';
             popup_status.value = '';
             closeTaskPopup();
+        }
+        function eraseTableRows() {
+            var table = document.getElementById('task_table');
+            var rowCount = table.rows.length;
+            // Starting from the bottom, remove each row one by one
+            for (var i = rowCount - 1; i > 0; i--) {
+                table.deleteRow(i);
+            }
         }
 
         async function AddDocument_CustomeID() {
@@ -219,6 +243,319 @@
 
         let deleteId = -1;
         async function ReadDocument() {
+            eraseTableRows();
+            const querySnapshot = await getDocs(collection(db, 'tasks'));
+            i = 1; // counter for task_id
+            querySnapshot.forEach((doc) => {
+
+                // Do not show completed tasks here
+                if (doc.data().task_status == 'completed') {
+                    return;
+                }
+
+                // Creating new row for each task
+                const trElement = document.createElement('tr');
+
+                trElement.setAttribute('id', 'trEle');
+                const td1 = document.createElement('td');
+                td1.innerHTML = i;
+                i++;
+                trElement.appendChild(td1);
+
+                const td2 = document.createElement('td');
+                td2.innerHTML = doc.data().task_name;
+                trElement.appendChild(td2);
+
+                const td3 = document.createElement('td');
+                td3.innerHTML = doc.data().task_due_date;
+                trElement.appendChild(td3);
+
+                const td4 = document.createElement('td');
+                trElement.appendChild(td4);
+
+                const td5 = document.createElement('td');
+
+                const iTag = document.createElement('i');
+                iTag.setAttribute('class', 'material-icons');
+                iTag.setAttribute('id', i.toString());
+                iTag.addEventListener("click", function () {
+                    deleteId = doc.data().task_id;
+                    CompleteTask();
+                });
+                iTag.innerHTML = '&#xe872;';
+
+                td5.appendChild(iTag);
+                trElement.appendChild(td5);
+
+                const td6 = document.createElement('td');
+
+                const iTag2 = document.createElement('i');
+                iTag2.setAttribute('class', 'material-icons');
+                iTag2.addEventListener("click", function () {
+                    deleteId = doc.data().task_id; // here Using the delete id as update_id
+                    UpdateTask();
+                });
+                iTag2.innerHTML = '&#xe3c9;';
+
+
+                // setting Status Strings and row colors as per status
+                if (doc.data().task_status == 'completed') {
+                    td4.innerHTML = "Done";
+                    trElement.style.backgroundColor = '#90EE90';
+                }
+                else if (doc.data().task_status == 'pending') {
+                    td4.innerHTML = "Pending";
+                    trElement.style.backgroundColor = '#FFCCCB';
+                }
+                else if (doc.data().task_status == 'in_progress') {
+                    td4.innerHTML = "In Progress";
+                    trElement.style.backgroundColor = '#FFD580';
+                }
+
+                td6.appendChild(iTag2);
+                trElement.appendChild(td6);
+
+                task_table.appendChild(trElement);
+
+            });
+        }
+
+        async function ReadCompletedDocument() {
+            eraseTableRows();
+            const querySnapshot = await getDocs(collection(db, 'tasks'));
+            i = 1; // counter for task_id
+            querySnapshot.forEach((doc) => {
+
+                // Do not show completed tasks here
+                if (doc.data().task_status != 'completed') {
+                    return;
+                }
+
+                // Creating new row for each task
+                const trElement = document.createElement('tr');
+
+                trElement.setAttribute('id', 'trEle');
+                const td1 = document.createElement('td');
+                td1.innerHTML = i;
+                i++;
+                trElement.appendChild(td1);
+
+                const td2 = document.createElement('td');
+                td2.innerHTML = doc.data().task_name;
+                trElement.appendChild(td2);
+
+                const td3 = document.createElement('td');
+                td3.innerHTML = doc.data().task_due_date;
+                trElement.appendChild(td3);
+
+                const td4 = document.createElement('td');
+                trElement.appendChild(td4);
+
+                const td5 = document.createElement('td');
+
+                const iTag = document.createElement('i');
+                iTag.setAttribute('class', 'material-icons');
+                iTag.setAttribute('id', i.toString());
+                iTag.addEventListener("click", function () {
+                    deleteId = doc.data().task_id;
+                    CompleteTask();
+                });
+                iTag.innerHTML = '&#xe872;';
+
+                td5.appendChild(iTag);
+                trElement.appendChild(td5);
+
+                const td6 = document.createElement('td');
+
+                const iTag2 = document.createElement('i');
+                iTag2.setAttribute('class', 'material-icons');
+                iTag2.addEventListener("click", function () {
+                    deleteId = doc.data().task_id; // here Using the delete id as update_id
+                    UpdateTask();
+                });
+                iTag2.innerHTML = '&#xe3c9;';
+
+
+                // setting Status Strings and row colors as per status
+                if (doc.data().task_status == 'completed') {
+                    td4.innerHTML = "Done";
+                    trElement.style.backgroundColor = '#90EE90';
+                }
+                else if (doc.data().task_status == 'pending') {
+                    td4.innerHTML = "Pending";
+                    trElement.style.backgroundColor = '#FFCCCB';
+                }
+                else if (doc.data().task_status == 'in_progress') {
+                    td4.innerHTML = "In Progress";
+                    trElement.style.backgroundColor = '#FFD580';
+                }
+
+                td6.appendChild(iTag2);
+                trElement.appendChild(td6);
+
+                task_table.appendChild(trElement);
+
+            });
+        }
+
+        async function ReadPendingDocument() {
+            eraseTableRows();
+            const querySnapshot = await getDocs(collection(db, 'tasks'));
+            i = 1; // counter for task_id
+            querySnapshot.forEach((doc) => {
+
+                // Do not show completed tasks here
+                if (doc.data().task_status != 'pending') {
+                    return;
+                }
+
+                // Creating new row for each task
+                const trElement = document.createElement('tr');
+
+                trElement.setAttribute('id', 'trEle');
+                const td1 = document.createElement('td');
+                td1.innerHTML = i;
+                i++;
+                trElement.appendChild(td1);
+
+                const td2 = document.createElement('td');
+                td2.innerHTML = doc.data().task_name;
+                trElement.appendChild(td2);
+
+                const td3 = document.createElement('td');
+                td3.innerHTML = doc.data().task_due_date;
+                trElement.appendChild(td3);
+
+                const td4 = document.createElement('td');
+                trElement.appendChild(td4);
+
+                const td5 = document.createElement('td');
+
+                const iTag = document.createElement('i');
+                iTag.setAttribute('class', 'material-icons');
+                iTag.setAttribute('id', i.toString());
+                iTag.addEventListener("click", function () {
+                    deleteId = doc.data().task_id;
+                    CompleteTask();
+                });
+                iTag.innerHTML = '&#xe872;';
+
+                td5.appendChild(iTag);
+                trElement.appendChild(td5);
+
+                const td6 = document.createElement('td');
+
+                const iTag2 = document.createElement('i');
+                iTag2.setAttribute('class', 'material-icons');
+                iTag2.addEventListener("click", function () {
+                    deleteId = doc.data().task_id; // here Using the delete id as update_id
+                    UpdateTask();
+                });
+                iTag2.innerHTML = '&#xe3c9;';
+
+
+                // setting Status Strings and row colors as per status
+                if (doc.data().task_status == 'completed') {
+                    td4.innerHTML = "Done";
+                    trElement.style.backgroundColor = '#90EE90';
+                }
+                else if (doc.data().task_status == 'pending') {
+                    td4.innerHTML = "Pending";
+                    trElement.style.backgroundColor = '#FFCCCB';
+                }
+                else if (doc.data().task_status == 'in_progress') {
+                    td4.innerHTML = "In Progress";
+                    trElement.style.backgroundColor = '#FFD580';
+                }
+
+                td6.appendChild(iTag2);
+                trElement.appendChild(td6);
+
+                task_table.appendChild(trElement);
+
+            });
+        }
+
+        async function ReadInProgressDocument() {
+            eraseTableRows();
+            const querySnapshot = await getDocs(collection(db, 'tasks'));
+            i = 1; // counter for task_id
+            querySnapshot.forEach((doc) => {
+
+                // Do not show completed tasks here
+                if (doc.data().task_status != 'in_progress') {
+                    return;
+                }
+
+                // Creating new row for each task
+                const trElement = document.createElement('tr');
+
+                trElement.setAttribute('id', 'trEle');
+                const td1 = document.createElement('td');
+                td1.innerHTML = i;
+                i++;
+                trElement.appendChild(td1);
+
+                const td2 = document.createElement('td');
+                td2.innerHTML = doc.data().task_name;
+                trElement.appendChild(td2);
+
+                const td3 = document.createElement('td');
+                td3.innerHTML = doc.data().task_due_date;
+                trElement.appendChild(td3);
+
+                const td4 = document.createElement('td');
+                trElement.appendChild(td4);
+
+                const td5 = document.createElement('td');
+
+                const iTag = document.createElement('i');
+                iTag.setAttribute('class', 'material-icons');
+                iTag.setAttribute('id', i.toString());
+                iTag.addEventListener("click", function () {
+                    deleteId = doc.data().task_id;
+                    CompleteTask();
+                });
+                iTag.innerHTML = '&#xe872;';
+
+                td5.appendChild(iTag);
+                trElement.appendChild(td5);
+
+                const td6 = document.createElement('td');
+
+                const iTag2 = document.createElement('i');
+                iTag2.setAttribute('class', 'material-icons');
+                iTag2.addEventListener("click", function () {
+                    deleteId = doc.data().task_id; // here Using the delete id as update_id
+                    UpdateTask();
+                });
+                iTag2.innerHTML = '&#xe3c9;';
+
+
+                // setting Status Strings and row colors as per status
+                if (doc.data().task_status == 'completed') {
+                    td4.innerHTML = "Done";
+                    trElement.style.backgroundColor = '#90EE90';
+                }
+                else if (doc.data().task_status == 'pending') {
+                    td4.innerHTML = "Pending";
+                    trElement.style.backgroundColor = '#FFCCCB';
+                }
+                else if (doc.data().task_status == 'in_progress') {
+                    td4.innerHTML = "In Progress";
+                    trElement.style.backgroundColor = '#FFD580';
+                }
+
+                td6.appendChild(iTag2);
+                trElement.appendChild(td6);
+
+                task_table.appendChild(trElement);
+
+            });
+        }
+
+        async function ReadAllDocument() {
+            eraseTableRows();
             const querySnapshot = await getDocs(collection(db, 'tasks'));
             i = 1; // counter for task_id
             querySnapshot.forEach((doc) => {
@@ -354,10 +691,10 @@
                 const Ref = await updateDoc( // For CUSTOME ID
                     // const docRef = await addDoc( // For AUTO ID
                     ref_update, {
-                    task_name : popup_title.value,
-                    task_desc : popup_desc.value,
-                    task_due_date : popup_due.value,
-                    task_status : popup_status.value
+                    task_name: popup_title.value,
+                    task_desc: popup_desc.value,
+                    task_due_date: popup_due.value,
+                    task_status: popup_status.value
                 }
                 )
                     .then(() => {
@@ -379,7 +716,11 @@
         create_task_btn.addEventListener("click", displayCreateTaskPopup);
         close_task_popup.addEventListener("click", closeTaskPopup);
         add_task_btn.addEventListener("click", AddDocument_CustomeID);
-        show_completed_task.addEventListener("click", ReadDocument);
+        show_completed_task.addEventListener("click", ReadCompletedDocument);
+        show_all_tasks.addEventListener("click", ReadAllDocument);
+        pending_task_btn.addEventListener("click", ReadPendingDocument);
+        in_progress_task_btn.addEventListener("click", ReadInProgressDocument);
+        reset_btn.addEventListener("click", ReadDocument);
 
     </script>
 </body>

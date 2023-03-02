@@ -4,12 +4,29 @@
     padding: 0px;
 }
 
+body
+{
+    background-image: url('../images/bg_two.jpg');
+    background-size: cover;
+    background-position: center center;
+}
+
 .wrapper
 {
     /* border: 1px solid; */
     height: 80vh;
     width: 90%;
     margin: auto;
+}
+
+.body_header 
+{
+    height: 100px;
+    width: 100%;
+    font-size: 53px;
+    font-family: 'Patua One', cursive;
+    line-height: 100px;
+    margin-top: 40px;
 }
 
 .operation_container
@@ -27,6 +44,7 @@
     border-radius: 4px;
     cursor: pointer;
     transition: .3s;
+    margin: 10px;
 }
 
 .operation_container button:hover{
@@ -36,14 +54,37 @@
 #btn1 {
     background-color: #5cb85c;
     color: white;
-    width: 100px;
-    margin-right: 10px;
+    width: 14%;
 }
 
 #btn2 {
     background-color: #0275d8;
     color: white;
-    width: 200px;
+    width: 14%;
+}
+
+#btn3 {
+    background-color: #ff8b48;
+    color: white;
+    width: 14%;
+}
+
+#btn4 {
+    background-color: #FFD580 ;
+    color: white;
+    width: 14%;
+}
+
+#btn5 {
+    background-color: #9b59b6 ;
+    color: white;
+    width: 14%;
+}
+
+#btn6 {
+    background-color: #0d72f5 ;
+    color: white;
+    width: 14%;
 }
 
 .task_table_container
