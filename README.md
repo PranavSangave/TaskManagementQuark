@@ -7,6 +7,9 @@ Task Management Application Using HTML, CSS &amp; Vanilla JS
 - Delete Task
 - Filter Tasks
 
+### Database Used
+- Firebase
+
 ## Application Shots
 ![image](https://user-images.githubusercontent.com/86056298/222497322-9c794b53-ede2-4f56-824d-03d9b61bfab1.png)
 ![image](https://user-images.githubusercontent.com/86056298/222497532-d4ad530f-5356-4686-b9b3-f54b09b6e225.png)
